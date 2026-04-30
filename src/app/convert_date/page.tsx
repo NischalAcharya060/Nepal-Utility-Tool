@@ -350,7 +350,7 @@ export default function TemporalPrecisionConverter() {
             Date Converter
           </h1>
           {todayBS && (
-            <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`}>
+            <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`} suppressHydrationWarning>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Today · {todayBS} BS
             </div>
@@ -603,7 +603,7 @@ export default function TemporalPrecisionConverter() {
       </main>
 
       <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p>© {new Date().getFullYear()} Date Converter</p>
+        <p suppressHydrationWarning>© {new Date().getFullYear()} Date Converter</p>
         <p>Press <kbd className={`px-1.5 py-0.5 rounded ${dark ? "bg-slate-800" : "bg-slate-100"}`}>Enter</kbd> to convert</p>
       </footer>
 

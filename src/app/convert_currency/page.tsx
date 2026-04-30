@@ -297,7 +297,7 @@ export default function CurrencyConverter() {
             Currency Converter
           </h1>
           {rates && (
-            <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`}>
+            <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`} suppressHydrationWarning>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Live · Updated {updatedLabel}
             </div>
@@ -578,7 +578,7 @@ export default function CurrencyConverter() {
       </main>
 
       <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p>© {new Date().getFullYear()} Currency Converter</p>
+        <p suppressHydrationWarning>© {new Date().getFullYear()} Currency Converter</p>
         {rates && <p>Base · {rates.base_code} · {Object.keys(rates.rates).length} currencies</p>}
       </footer>
     </div>
