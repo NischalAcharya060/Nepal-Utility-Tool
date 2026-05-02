@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  Calendar, Wallet, ArrowRight, Sun, Moon, HelpCircle, Settings,
+  Calendar, Wallet, Languages, ArrowRight, Sun, Moon, HelpCircle, Settings,
   Sparkles, Globe, Clock
 } from "lucide-react";
 
@@ -36,6 +36,15 @@ const TOOLS: Tool[] = [
     description: "Live exchange rates with NPR-focused popular pairs, favorites, history, and CSV export.",
     icon: <Wallet size={22} />,
     accent: "from-emerald-500/20 to-emerald-500/0",
+    available: true,
+  },
+  {
+    href: "/convert_language",
+    title: "Language Converter",
+    tag: "Translate",
+    description: "Translate between Nepali, English, Hindi and more — with quick swap and one-tap language pairs.",
+    icon: <Languages size={22} />,
+    accent: "from-violet-500/20 to-violet-500/0",
     available: true,
   },
 ];
