@@ -2,6 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
+import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { THEME_KEY } from "@/lib/theme";
 import { LANGUAGES, type Language } from "@/lib/i18n";
@@ -9,8 +10,8 @@ import { useI18n } from "@/lib/i18n-context";
 import ActionModal from "@/components/ui/ActionModal";
 import {
   ArrowLeftRight, RefreshCw, Copy, Check, Search, History, Trash2, Download,
-  TrendingUp, AlertCircle, Settings, HelpCircle, Sun, Moon, Wallet, Globe,
-  ChevronDown, Star, Globe2
+  AlertCircle, Settings, HelpCircle, Sun, Moon, Wallet,
+  ChevronDown, Star, Globe2, ArrowUpRight, ArrowLeft,
 } from "lucide-react";
 
 type RatesResponse = {
@@ -36,7 +37,7 @@ type HistoryEntry = {
 
 const API_BASE = "https://open.er-api.com/v6/latest";
 const CACHE_KEY_PREFIX = "ncc_rates_v1_";
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = 60 * 60 * 1000;
 const HISTORY_KEY = "ncc_history_v1";
 const FAVS_KEY = "ncc_favs_v1";
 const RECENT_KEY = "ncc_recent_v1";
@@ -46,7 +47,6 @@ const POPULAR_PAIRS: Array<[string, string]> = [
   ["AUD", "NPR"], ["JPY", "NPR"], ["AED", "NPR"], ["SAR", "NPR"],
 ];
 
-// Display names for the most common currencies. Anything missing falls back to its code.
 const CURRENCY_NAMES: Record<string, string> = {
   USD: "US Dollar", EUR: "Euro", GBP: "British Pound", JPY: "Japanese Yen",
   CNY: "Chinese Yuan", INR: "Indian Rupee", NPR: "Nepalese Rupee", AUD: "Australian Dollar",
@@ -131,15 +131,16 @@ export default function CurrencyConverter() {
   const fromRef = useRef<HTMLDivElement>(null);
   const toRef = useRef<HTMLDivElement>(null);
 
-  // Load persisted state
+  const isNe = lang === "ne";
+
   useEffect(() => {
     try {
       const h = localStorage.getItem(HISTORY_KEY);
       if (h) setHistory(JSON.parse(h));
       const f = localStorage.getItem(FAVS_KEY);
       if (f) setFavorites(JSON.parse(f));
-      const t = localStorage.getItem(THEME_KEY);
-      if (t === "dark") setDark(true);
+      const th = localStorage.getItem(THEME_KEY);
+      if (th === "dark") setDark(true);
       const r = localStorage.getItem(RECENT_KEY);
       if (r) setRecentAmounts(JSON.parse(r));
     } catch {}
@@ -166,20 +167,16 @@ export default function CurrencyConverter() {
     }
   }, []);
 
-  // Load rates whenever `from` changes
   useEffect(() => { loadRates(from); }, [from, loadRates]);
 
-  // Close dropdowns on outside click or Escape
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (fromRef.current && !fromRef.current.contains(t) && toRef.current && !toRef.current.contains(t)) {
+      const tgt = e.target as Node;
+      if (fromRef.current && !fromRef.current.contains(tgt) && toRef.current && !toRef.current.contains(tgt)) {
         setOpenSelect(null);
       }
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenSelect(null);
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpenSelect(null); };
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -218,7 +215,6 @@ export default function CurrencyConverter() {
     const newFrom = to;
     const newTo = from;
     if (rates && rates.rates[to]) {
-      // Convert displayed amount so swap shows the inverse value
       const swapped = numericAmount * rate;
       setAmount(swapped > 0 ? String(Number(swapped.toFixed(6))) : "0");
     }
@@ -299,185 +295,220 @@ export default function CurrencyConverter() {
     } catch { return rates.time_last_update_utc; }
   }, [rates]);
 
-  // Theme classes (kept consistent with the date converter for visual cohesion)
-  const themeBg = dark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-800";
-  const cardBg = dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
-  const inputBg = dark
-    ? "bg-slate-900 border-slate-700 text-slate-100 focus:border-sky-400 focus:ring-sky-400/20"
-    : "bg-white border-slate-200 focus:border-sky-500 focus:ring-sky-500/10";
-  const mutedText = dark ? "text-slate-400" : "text-slate-500";
-  const headerBg = dark ? "bg-slate-950 border-slate-800" : "bg-white border-slate-200";
-  const subtleSurface = dark ? "bg-slate-900/60 border-slate-800" : "bg-slate-50/50 border-slate-100";
+  const page = dark ? "bg-[#0a0a0a] text-zinc-100" : "bg-[#fafaf7] text-zinc-900";
+  const surface = dark ? "bg-zinc-950 border-zinc-800/80" : "bg-white border-zinc-200/80";
+  const subtle = dark ? "text-zinc-400" : "text-zinc-600";
+  const muted = dark ? "text-zinc-500" : "text-zinc-500";
+  const hairline = dark ? "border-zinc-800/80" : "border-zinc-200/80";
+  const inputCls = dark
+    ? "bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-emerald-500/60 focus:ring-emerald-500/15"
+    : "bg-white border-zinc-200 text-zinc-900 focus:border-emerald-500/60 focus:ring-emerald-500/15";
+  const iconBtn = dark
+    ? "border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-zinc-300"
+    : "border-zinc-200 hover:border-zinc-300 hover:bg-white text-zinc-700";
 
   return (
-    <div className={`min-h-screen ${themeBg} font-sans selection:bg-sky-100 transition-colors`}>
-      <header className={`${headerBg} border-b px-6 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur`}>
-        <div className="flex items-center gap-6">
-          <h1 className="text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
-            <Wallet className="text-sky-500" size={20} />
-            {t("currencyConverter")}
-          </h1>
-          {rates && (
-            <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`} suppressHydrationWarning>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t("live")} · {lang === "ne" ? "अपडेट" : "Updated"} {updatedLabel}
-            </div>
-          )}
-        </div>
-        <div className={`flex items-center gap-2 ${mutedText}`}>
-          <button
-            onClick={() => setLang(lang === "en" ? "ne" : "en")}
-            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
-            aria-label="Toggle language"
-            title={lang === "en" ? "नेपाली" : "English"}
-          >
-            <Globe2 size={18} />
-            <span className="hidden sm:inline">{LANGUAGES[lang === "en" ? "ne" : "en"].native}</span>
-          </button>
-          <button
-            onClick={() => loadRates(from, true)}
-            disabled={loading}
-            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors disabled:opacity-40"
-            aria-label="Refresh rates"
-            title="Refresh rates"
-          >
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          </button>
-          <button
-            onClick={() => setDark(d => !d)}
-            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {dark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <button
-            onClick={() => setShowHelp(true)}
-            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
-            aria-label="Help"
-          >
-            <HelpCircle size={18} />
-          </button>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
-            aria-label="Settings"
-          >
-            <Settings size={18} />
-          </button>
-        </div>
-      </header>
+    <div className={`min-h-screen ${page} antialiased selection:bg-emerald-500/30 selection:text-inherit`}>
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.35] dark:opacity-[0.18]"
+        style={{
+          backgroundImage: dark
+            ? "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)"
+            : "linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          maskImage: "radial-gradient(ellipse at 50% 0%, black 30%, transparent 75%)",
+        }}
+      />
 
-      <main className="max-w-6xl mx-auto p-6 md:p-8 grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Converter card */}
-          <div className={`${cardBg} rounded-2xl border shadow-sm transition-all hover:shadow-md`}>
-            <div className={`p-6 border-b ${dark ? "border-slate-800" : "border-slate-100"} flex flex-wrap items-center justify-between gap-3`}>
-              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-sky-500" />
-                <span className="text-xs font-bold uppercase tracking-widest">{t("liveExchangeRates")}</span>
-              </div>
-              <div className={`text-[10px] font-semibold ${mutedText}`}>
-                Source: exchangerate-api.com
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div className="p-8 space-y-6">
-              <div className="space-y-2">
-                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{t("amount")}</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value.replace(/[^\d.,-]/g, ""))}
-                  className={`w-full border ${inputBg} rounded-xl p-5 text-2xl focus:ring-4 outline-none transition-all font-bold tracking-tight`}
-                  placeholder="0.00"
-                />
-                {recentAmounts.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} self-center`}>{lang === "ne" ? "हालका:" : "Recent:"}</span>
-                    {recentAmounts.map(a => (
-                      <button
-                        key={a}
-                        onClick={() => setAmount(String(a))}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100"} transition-colors`}
-                      >
-                        {formatPlain(a)}
-                      </button>
-                    ))}
+      <header className={`sticky top-0 z-40 border-b ${hairline} backdrop-blur-md ${dark ? "bg-[#0a0a0a]/75" : "bg-[#fafaf7]/75"}`}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex h-16 items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <Link
+                href="/"
+                className={`inline-flex h-9 items-center gap-2 rounded-md border px-3 text-[12px] font-medium ${iconBtn}`}
+              >
+                <ArrowLeft size={13} />
+                <span className="hidden sm:inline">{isNe ? "गृह" : "Home"}</span>
+              </Link>
+              <div className={`hidden md:block h-6 w-px ${dark ? "bg-zinc-800" : "bg-zinc-200"}`} />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-md border ${hairline}`}>
+                  <Wallet size={15} />
+                </div>
+                <div className="leading-tight min-w-0">
+                  <div className="text-[13px] font-semibold tracking-tight truncate">{t("currencyConverter")}</div>
+                  <div className={`text-[10px] tracking-[0.16em] uppercase ${muted}`}>
+                    {isNe ? "प्रत्यक्ष विदेशी विनिमय" : "Live foreign exchange"}
                   </div>
-                )}
+                </div>
               </div>
-
-              {/* From / Swap / To */}
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-start gap-3">
-                <CurrencySelector
-                  label={t("from")}
-                  code={from}
-                  open={openSelect === "from"}
-                  onOpen={() => { setOpenSelect(openSelect === "from" ? null : "from"); setSearch(""); }}
-                  onSelect={(c) => handleSelect(c, "from")}
-                  currencies={filteredCurrencies}
-                  search={search}
-                  setSearch={setSearch}
-                  dark={dark}
-                  inputBg={inputBg}
-                  mutedText={mutedText}
-                  panelRef={fromRef}
-                  favorites={favorites}
-                  toggleFavorite={(c) => toggleFavorite(`${c}-${to}`)}
-                  pairKeyFor={(c) => `${c}-${to}`}
-                />
-
-                <button
-                  onClick={handleSwap}
-                  className="p-4 rounded-full bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-200 transition-all active:scale-90 mx-auto rotate-90 md:rotate-0 md:mt-7"
-                  aria-label="Swap currencies"
-                  title="Swap"
-                >
-                  <ArrowLeftRight size={18} />
-                </button>
-
-                <CurrencySelector
-                  label={t("to")}
-                  code={to}
-                  open={openSelect === "to"}
-                  onOpen={() => { setOpenSelect(openSelect === "to" ? null : "to"); setSearch(""); }}
-                  onSelect={(c) => handleSelect(c, "to")}
-                  currencies={filteredCurrencies}
-                  search={search}
-                  setSearch={setSearch}
-                  dark={dark}
-                  inputBg={inputBg}
-                  mutedText={mutedText}
-                  panelRef={toRef}
-                  favorites={favorites}
-                  toggleFavorite={(c) => toggleFavorite(`${from}-${c}`)}
-                  pairKeyFor={(c) => `${from}-${c}`}
-                />
-              </div>
-
-              {error && (
-                <div className="border border-red-200 bg-red-50 text-red-700 px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2">
-                  <AlertCircle size={14} /> {error}
+              {rates && (
+                <div className={`hidden xl:flex items-center gap-2 ml-2 pl-4 border-l ${hairline} text-[11px] ${muted}`} suppressHydrationWarning>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="tracking-wide">{isNe ? "अद्यावधिक" : "Updated"} {updatedLabel}</span>
                 </div>
               )}
             </div>
 
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setLang(lang === "en" ? "ne" : "en")}
+                className={`hidden sm:inline-flex h-9 items-center gap-2 rounded-md border px-3 text-[12px] font-medium ${iconBtn}`}
+              >
+                <Globe2 size={14} />
+                <span>{LANGUAGES[lang === "en" ? "ne" : "en"].native}</span>
+              </button>
+              <button
+                onClick={() => loadRates(from, true)}
+                disabled={loading}
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-md border ${iconBtn} disabled:opacity-40`}
+                aria-label="Refresh"
+                title="Refresh rates"
+              >
+                <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              </button>
+              <button onClick={() => setDark(d => !d)} className={`inline-flex h-9 w-9 items-center justify-center rounded-md border ${iconBtn}`}>
+                {dark ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
+              <button onClick={() => setShowHelp(true)} className={`inline-flex h-9 w-9 items-center justify-center rounded-md border ${iconBtn}`}>
+                <HelpCircle size={15} />
+              </button>
+              <button onClick={() => setShowSettings(true)} className={`inline-flex h-9 w-9 items-center justify-center rounded-md border ${iconBtn}`}>
+                <Settings size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-6 py-10 grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className={`text-[11px] uppercase tracking-[0.18em] ${muted}`}>
+                {isNe ? "उपकरण · ०२" : "Utility · 02"}
+              </div>
+              <h1 className="mt-2 text-[28px] md:text-[32px] font-semibold tracking-tight leading-tight">
+                {isNe ? "मुद्रा रूपान्तरण" : "Currency Exchange"}
+              </h1>
+            </div>
+            <span className={`hidden md:block text-[11px] uppercase tracking-[0.16em] ${muted}`}>
+              {isNe ? "exchangerate-api.com बाट" : "Source · exchangerate-api.com"}
+            </span>
+          </div>
+
+          {/* Converter */}
+          <div className={`overflow-hidden rounded-xl border ${hairline} ${surface}`}>
+            {/* Amount */}
+            <div className={`p-6 md:p-7 border-b ${hairline}`}>
+              <label className={`text-[10px] font-medium uppercase tracking-[0.16em] ${muted}`}>{t("amount")}</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/[^\d.,-]/g, ""))}
+                placeholder="0.00"
+                className={`mt-2 w-full bg-transparent border-0 outline-none text-[34px] md:text-[44px] font-semibold tracking-tight tabular-nums ${dark ? "placeholder:text-zinc-700" : "placeholder:text-zinc-300"}`}
+              />
+              {recentAmounts.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={`text-[10px] uppercase tracking-[0.16em] ${muted}`}>
+                    {isNe ? "हालका" : "Recent"}
+                  </span>
+                  {recentAmounts.map(a => (
+                    <button
+                      key={a}
+                      onClick={() => setAmount(String(a))}
+                      className={`rounded-full border ${hairline} px-2.5 py-1 text-[11px] font-medium tabular-nums transition ${dark ? "hover:bg-zinc-900" : "hover:bg-zinc-50"}`}
+                    >
+                      {formatPlain(a)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* From / Swap / To */}
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-start">
+              <CurrencySelector
+                label={t("from")}
+                code={from}
+                open={openSelect === "from"}
+                onOpen={() => { setOpenSelect(openSelect === "from" ? null : "from"); setSearch(""); }}
+                onSelect={(c) => handleSelect(c, "from")}
+                currencies={filteredCurrencies}
+                search={search}
+                setSearch={setSearch}
+                dark={dark}
+                hairline={hairline}
+                inputCls={inputCls}
+                muted={muted}
+                panelRef={fromRef}
+                favorites={favorites}
+                toggleFavorite={(c) => toggleFavorite(`${c}-${to}`)}
+                pairKeyFor={(c) => `${c}-${to}`}
+                placeholderEn="Search currency..."
+                placeholderNe="मुद्रा खोज्नुहोस्..."
+                isNe={isNe}
+              />
+
+              <div className={`flex items-center justify-center px-4 py-2 md:py-7 border-y md:border-y-0 md:border-x ${hairline}`}>
+                <button
+                  onClick={handleSwap}
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full border ${iconBtn} rotate-90 md:rotate-0 transition hover:border-emerald-500/50`}
+                  aria-label="Swap"
+                  title="Swap"
+                >
+                  <ArrowLeftRight size={15} />
+                </button>
+              </div>
+
+              <CurrencySelector
+                label={t("to")}
+                code={to}
+                open={openSelect === "to"}
+                onOpen={() => { setOpenSelect(openSelect === "to" ? null : "to"); setSearch(""); }}
+                onSelect={(c) => handleSelect(c, "to")}
+                currencies={filteredCurrencies}
+                search={search}
+                setSearch={setSearch}
+                dark={dark}
+                hairline={hairline}
+                inputCls={inputCls}
+                muted={muted}
+                panelRef={toRef}
+                favorites={favorites}
+                toggleFavorite={(c) => toggleFavorite(`${from}-${c}`)}
+                pairKeyFor={(c) => `${from}-${c}`}
+                placeholderEn="Search currency..."
+                placeholderNe="मुद्रा खोज्नुहोस्..."
+                isNe={isNe}
+              />
+            </div>
+
+            {error && (
+              <div className={`mx-6 mb-6 flex items-center gap-2 rounded-md border px-3 py-2.5 text-[12px] ${dark ? "border-rose-900/60 bg-rose-950/40 text-rose-300" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                <AlertCircle size={13} /> {error}
+              </div>
+            )}
+
             {/* Result */}
-            <div className={`${dark ? "bg-slate-900/80 border-slate-800" : "bg-slate-50/80 border-slate-100"} border-t p-8`}>
+            <div className={`border-t ${hairline} ${dark ? "bg-zinc-950/60" : "bg-zinc-50/60"} p-6 md:p-8`}>
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                <div className="space-y-3 flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-sky-600 uppercase tracking-widest flex items-center gap-2">
-                    <TrendingUp size={12} /> {numericAmount > 0 ? formatPlain(numericAmount) : "0"} {from} {t("equals")}
-                  </p>
-                  <h2 className={`text-3xl md:text-4xl font-bold tracking-tight break-words ${dark ? "text-white" : "text-slate-900"}`}>
+                <div className="flex-1 min-w-0 space-y-3">
+                  <div className={`text-[11px] uppercase tracking-[0.18em] ${muted} flex items-center gap-2`}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {numericAmount > 0 ? formatPlain(numericAmount) : "0"} {from} {t("equals")}
+                  </div>
+                  <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight leading-tight tabular-nums break-words">
                     {loading && !rates ? t("loading") : rate ? formatNumber(converted, to) : "—"}
                   </h2>
                   {rate > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      <Pill dark={dark}>1 {from} = {formatPlain(rate)} {to}</Pill>
-                      <Pill dark={dark}>1 {to} = {formatPlain(inverseRate)} {from}</Pill>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Tag dark={dark} hairline={hairline}>1 {from} = <span className="tabular-nums">{formatPlain(rate)}</span> {to}</Tag>
+                      <Tag dark={dark} hairline={hairline}>1 {to} = <span className="tabular-nums">{formatPlain(inverseRate)}</span> {from}</Tag>
                     </div>
                   )}
                 </div>
@@ -485,9 +516,14 @@ export default function CurrencyConverter() {
                   <button
                     onClick={handleCopy}
                     disabled={!rate}
-                    className={`px-6 py-3 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${copied ? "bg-emerald-500 text-white shadow-emerald-100" : "bg-[#4AC4F3] hover:bg-[#3bb1e0] text-white shadow-sky-100"}`}
+                    className={`inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-[12px] font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                      copied
+                        ? "bg-emerald-500 text-white"
+                        : dark ? "bg-zinc-100 text-zinc-900 hover:bg-white" : "bg-zinc-900 text-white hover:bg-zinc-800"
+                    }`}
                   >
-                    {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? t("saved") : t("copy")}
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? t("saved") : t("copy")}
                   </button>
                 </div>
               </div>
@@ -495,15 +531,17 @@ export default function CurrencyConverter() {
           </div>
 
           {/* Popular pairs */}
-          <div className={`${cardBg} rounded-2xl border shadow-sm p-6`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-sm flex items-center gap-2">
-                <Star size={16} className="text-amber-400" />
-                {favorites.length > 0 ? t("favoritesPopular") : t("popularPairs")}
-              </h3>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{t("nprFocused")}</span>
+          <div className={`rounded-xl border ${hairline} ${surface}`}>
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${hairline}`}>
+              <div className="flex items-center gap-2">
+                <Star size={14} className="text-amber-500" />
+                <h3 className="text-[12px] font-semibold tracking-wide uppercase">
+                  {favorites.length > 0 ? t("favoritesPopular") : t("popularPairs")}
+                </h3>
+              </div>
+              <span className={`text-[10px] uppercase tracking-[0.16em] ${muted}`}>{t("nprFocused")}</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-transparent">
               {[...favorites.map(f => f.split("-") as [string, string]), ...POPULAR_PAIRS]
                 .filter((p, i, arr) => arr.findIndex(q => q[0] === p[0] && q[1] === p[1]) === i)
                 .slice(0, 8)
@@ -514,16 +552,21 @@ export default function CurrencyConverter() {
                     <button
                       key={`${f}-${toCode}`}
                       onClick={() => { setFrom(f); setTo(toCode); }}
-                      className={`p-3 rounded-xl border text-left transition-all ${isActive
-                        ? "border-sky-500 bg-sky-500/10"
-                        : `${subtleSurface} hover:border-sky-300`}`}
+                      className={`group relative flex flex-col items-start gap-1 p-4 text-left transition ${
+                        isActive
+                          ? (dark ? "bg-emerald-500/10" : "bg-emerald-50")
+                          : `${dark ? "hover:bg-zinc-900/60" : "hover:bg-zinc-50"}`
+                      }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold">
-                          {CURRENCY_FLAGS[f] || ""} {f} → {CURRENCY_FLAGS[toCode] || ""} {toCode}
-                        </span>
+                      {isActive && <span className="absolute left-0 top-3 bottom-3 w-0.5 rounded-r bg-emerald-500" />}
+                      <div className="flex items-center gap-1.5 text-[12px] font-medium">
+                        <span className="text-base leading-none">{CURRENCY_FLAGS[f] || ""}</span>
+                        <span>{f}</span>
+                        <span className={muted}>→</span>
+                        <span className="text-base leading-none">{CURRENCY_FLAGS[toCode] || ""}</span>
+                        <span>{toCode}</span>
                       </div>
-                      <p className={`text-[11px] font-semibold ${mutedText}`}>
+                      <p className={`text-[11px] tabular-nums ${muted}`}>
                         {r ? `1 = ${formatPlain(r)}` : t("tapToView")}
                       </p>
                     </button>
@@ -531,116 +574,118 @@ export default function CurrencyConverter() {
                 })}
             </div>
           </div>
+
+          {/* Insight */}
+          <div className={`grid md:grid-cols-[auto_1fr] gap-6 rounded-xl border ${hairline} ${surface} p-6`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-md border ${hairline}`}>
+              <Wallet size={16} />
+            </div>
+            <div>
+              <div className={`text-[11px] uppercase tracking-[0.16em] ${muted}`}>{t("forexInsight")}</div>
+              <p className={`mt-2 text-[14px] leading-relaxed ${subtle}`}>{t("forexInsightDesc")}</p>
+            </div>
+          </div>
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          <div className={`${cardBg} p-6 rounded-2xl border shadow-sm min-h-[400px] flex flex-col`}>
-            <div className="flex items-center justify-between mb-6">
+        <aside className="space-y-6">
+          <div className={`rounded-xl border ${hairline} ${surface}`}>
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${hairline}`}>
               <div className="flex items-center gap-2">
-                <History size={18} className={mutedText} />
-                <h3 className="font-bold text-sm">{t("activityLog")}</h3>
+                <History size={14} className={muted} />
+                <h3 className="text-[12px] font-semibold tracking-wide uppercase">{t("activityLog")}</h3>
                 {history.length > 0 && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
-                    {history.length}
-                  </span>
+                  <span className={`text-[10px] tabular-nums ${muted}`}>· {history.length}</span>
                 )}
               </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={exportCSV}
                   disabled={history.length === 0}
-                  className={`p-1.5 rounded-md transition-colors ${history.length === 0 ? "opacity-30 cursor-not-allowed" : "text-slate-400 hover:text-sky-500 hover:bg-sky-500/10"}`}
-                  title="Export as CSV"
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition ${history.length === 0 ? "opacity-30 cursor-not-allowed" : `${muted} hover:text-emerald-500`}`}
                   aria-label="Export"
+                  title="Export CSV"
                 >
-                  <Download size={14} />
+                  <Download size={13} />
                 </button>
                 <button
                   onClick={() => setHistory([])}
                   disabled={history.length === 0}
-                  className={`p-1.5 rounded-md transition-colors ${history.length === 0 ? "opacity-30 cursor-not-allowed" : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"}`}
-                  title="Clear all"
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition ${history.length === 0 ? "opacity-30 cursor-not-allowed" : `${muted} hover:text-rose-500`}`}
                   aria-label="Clear"
+                  title="Clear"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-3 flex-1 overflow-auto max-h-[440px] pr-1">
+            <div className="max-h-[460px] overflow-auto p-3">
               {history.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className={`w-12 h-12 ${dark ? "bg-slate-800" : "bg-slate-50"} rounded-full flex items-center justify-center mb-3`}>
-                    <Wallet className={dark ? "text-slate-600" : "text-slate-200"} size={24} />
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${hairline}`}>
+                    <Wallet size={16} className={muted} />
                   </div>
-                  <p className={`text-xs italic px-4 ${mutedText}`}>{t("copiedConversionsAppear")}</p>
+                  <p className={`mt-3 text-[12px] px-4 ${muted}`}>{t("copiedConversionsAppear")}</p>
                 </div>
               ) : (
-                history.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => { setFrom(item.from); setTo(item.to); setAmount(String(item.amount)); }}
-                    className={`w-full text-left p-4 rounded-xl border ${subtleSurface} group hover:border-sky-200 transition-all`}
-                  >
-                    <div className="flex justify-between text-[9px] font-bold text-sky-600 uppercase mb-2">
-                      <span>{item.from} → {item.to}</span>
-                      <span className={`${dark ? "text-slate-500" : "text-slate-300"} group-hover:text-slate-400 transition-colors`}>{item.time}</span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className={`text-xs font-medium ${mutedText}`}>{formatPlain(item.amount)} {item.from}</p>
-                      <div className={`w-4 h-[1px] ${dark ? "bg-slate-700" : "bg-slate-200"} my-1`} />
-                      <p className={`text-sm font-bold ${dark ? "text-white" : "text-slate-900"}`}>
-                        {formatPlain(item.result)} {item.to}
-                      </p>
-                      <p className={`text-[10px] ${mutedText}`}>@ {formatPlain(item.rate)}</p>
-                    </div>
-                  </button>
-                ))
+                <ul>
+                  {history.map((item, idx) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => { setFrom(item.from); setTo(item.to); setAmount(String(item.amount)); }}
+                        className={`w-full text-left rounded-lg px-3 py-3 transition ${dark ? "hover:bg-zinc-900/60" : "hover:bg-zinc-50"}`}
+                      >
+                        <div className={`flex items-center justify-between text-[10px] uppercase tracking-[0.14em] ${muted} mb-1.5`}>
+                          <span className="tabular-nums">{String(idx + 1).padStart(2, "0")} · {item.from} → {item.to}</span>
+                          <span suppressHydrationWarning>{item.time}</span>
+                        </div>
+                        <div className={`text-[12px] tabular-nums ${subtle}`}>{formatPlain(item.amount)} {item.from}</div>
+                        <div className={`mt-0.5 text-[13px] font-medium tabular-nums ${dark ? "text-zinc-100" : "text-zinc-900"}`}>
+                          {formatPlain(item.result)} {item.to}
+                        </div>
+                        <div className={`text-[10px] tabular-nums ${muted}`}>@ {formatPlain(item.rate)}</div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-8 aspect-square flex flex-col justify-end group">
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
-            <img
-              src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=600"
-              className="absolute inset-0 h-full w-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-[2s]"
-              alt="Currency"
-            />
-            <div className="relative z-20 space-y-3">
-              <div className="w-8 h-1 bg-sky-500 rounded-full" />
-              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">{t("forexInsight")}</p>
-              <p className="text-sm leading-relaxed text-slate-200 font-medium">
-                {t("forexInsightDesc")}
-              </p>
+          <div className={`rounded-xl border ${hairline} ${surface} p-5`}>
+            <div className={`text-[11px] uppercase tracking-[0.16em] ${muted}`}>
+              {isNe ? "अन्य उपकरण" : "More utilities"}
+            </div>
+            <div className="mt-3 space-y-2">
+              <CrossLink href="/convert_date" label={isNe ? "मिति रूपान्तरण" : "Date Converter"} sub="01" hairline={hairline} dark={dark} />
+              <CrossLink href="/convert_language" label={isNe ? "भाषा अनुवाद" : "Language Converter"} sub="03" hairline={hairline} dark={dark} />
             </div>
           </div>
-        </div>
+        </aside>
       </main>
 
-      <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p suppressHydrationWarning>© {new Date().getFullYear()} {t("currencyConverter")}</p>
-        {rates && <p>{t("base")} · {rates.base_code} · {Object.keys(rates.rates).length} {t("currencies")}</p>}
+      <footer className={`border-t ${hairline} mt-8`}>
+        <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className={`text-[11px] tracking-wide ${muted}`} suppressHydrationWarning>
+            © {new Date().getFullYear()} · {t("siteName")}
+          </p>
+          {rates && (
+            <p className={`text-[11px] ${muted}`}>
+              {t("base")} · {rates.base_code} · {Object.keys(rates.rates).length} {t("currencies")}
+            </p>
+          )}
+        </div>
       </footer>
 
-      <ActionModal
-        open={showHelp}
-        onClose={() => setShowHelp(false)}
-        title={t("currencyHelp")}
-        dark={dark}
-      >
+      <ActionModal open={showHelp} onClose={() => setShowHelp(false)} title={t("currencyHelp")} dark={dark}>
         <p>{t("currencyHelpDesc1")}</p>
         <p>{t("currencyHelpDesc2")}</p>
       </ActionModal>
 
-      <ActionModal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        title={t("currencySettings")}
-        dark={dark}
-      >
-        <div className="flex items-center gap-3 px-3 py-2 border rounded-lg">
+      <ActionModal open={showSettings} onClose={() => setShowSettings(false)} title={t("currencySettings")} dark={dark}>
+        <div className={`flex items-center gap-3 px-3 py-2 border rounded-lg ${hairline}`}>
           <Globe2 size={16} />
           <select
             value={lang}
@@ -648,7 +693,7 @@ export default function CurrencyConverter() {
             className="bg-transparent outline-none text-sm font-semibold flex-1 cursor-pointer"
           >
             {Object.entries(LANGUAGES).map(([code, info]) => (
-              <option key={code} value={code} className={dark ? "bg-slate-900 text-white" : "bg-white text-slate-800"}>
+              <option key={code} value={code} className={dark ? "bg-zinc-900 text-white" : "bg-white text-zinc-800"}>
                 {info.label} · {info.native}
               </option>
             ))}
@@ -657,14 +702,14 @@ export default function CurrencyConverter() {
         <button
           type="button"
           onClick={() => setDark(d => !d)}
-          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-zinc-800 hover:bg-zinc-900" : "border-zinc-200 hover:bg-zinc-50"}`}
         >
           {t("toggleTheme")}
         </button>
         <button
           type="button"
           onClick={clearToolData}
-          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-zinc-800 hover:bg-zinc-900" : "border-zinc-200 hover:bg-zinc-50"}`}
         >
           {t("clearHistoryFavorites")}
         </button>
@@ -683,71 +728,81 @@ function CurrencySelector(props: {
   search: string;
   setSearch: (s: string) => void;
   dark: boolean;
-  inputBg: string;
-  mutedText: string;
+  hairline: string;
+  inputCls: string;
+  muted: string;
   panelRef: React.RefObject<HTMLDivElement | null>;
   favorites: string[];
   toggleFavorite: (c: string) => void;
   pairKeyFor: (c: string) => string;
+  placeholderEn: string;
+  placeholderNe: string;
+  isNe: boolean;
 }) {
-  const { label, code, open, onOpen, onSelect, currencies, search, setSearch, dark, inputBg, mutedText, panelRef, favorites, toggleFavorite, pairKeyFor } = props;
+  const {
+    label, code, open, onOpen, onSelect, currencies, search, setSearch,
+    dark, hairline, muted, panelRef, favorites, toggleFavorite, pairKeyFor,
+    placeholderEn, placeholderNe, isNe,
+  } = props;
   return (
-    <div className={`relative space-y-2 ${open ? "z-[60]" : ""}`} ref={panelRef}>
-      <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{label}</label>
+    <div className={`relative p-5 ${open ? "z-[60]" : ""}`} ref={panelRef}>
+      <label className={`text-[10px] font-medium uppercase tracking-[0.16em] ${muted}`}>{label}</label>
       <button
         type="button"
         onClick={onOpen}
-        className={`w-full border ${inputBg} rounded-xl p-4 text-sm flex items-center justify-between transition-all font-medium`}
+        className={`mt-2 w-full flex items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-left transition ${
+          dark ? "bg-zinc-950 border-zinc-800 hover:border-zinc-700" : "bg-white border-zinc-200 hover:border-zinc-300"
+        }`}
       >
-        <span className="flex items-center gap-2.5 min-w-0">
-          <span className="text-xl shrink-0">{CURRENCY_FLAGS[code] || "🏳️"}</span>
+        <span className="flex items-center gap-3 min-w-0">
+          <span className="text-2xl leading-none shrink-0">{CURRENCY_FLAGS[code] || "🏳️"}</span>
           <span className="flex flex-col items-start min-w-0">
-            <span className="font-bold">{code}</span>
-            <span className={`text-[10px] truncate ${mutedText}`}>{CURRENCY_NAMES[code] || code}</span>
+            <span className="text-[15px] font-semibold tracking-tight">{code}</span>
+            <span className={`text-[11px] truncate ${muted}`}>{CURRENCY_NAMES[code] || code}</span>
           </span>
         </span>
-        <ChevronDown size={16} className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={15} className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className={`mt-2 rounded-xl border shadow-2xl overflow-hidden ${dark ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
-          <div className={`p-3 border-b ${dark ? "border-slate-800" : "border-slate-100"}`}>
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${dark ? "bg-slate-800" : "bg-slate-100"}`}>
-              <Search size={14} className={mutedText} />
+        <div className={`absolute left-5 right-5 mt-2 rounded-md border shadow-2xl overflow-hidden ${dark ? "bg-zinc-950 border-zinc-800" : "bg-white border-zinc-200"}`}>
+          <div className={`p-2 border-b ${hairline}`}>
+            <div className={`flex items-center gap-2 rounded px-2.5 py-2 ${dark ? "bg-zinc-900" : "bg-zinc-50"}`}>
+              <Search size={13} className={muted} />
               <input
                 autoFocus
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search currency..."
-                className="bg-transparent outline-none text-sm w-full"
+                placeholder={isNe ? placeholderNe : placeholderEn}
+                className="bg-transparent outline-none text-[13px] w-full"
               />
             </div>
           </div>
           <div className="max-h-72 overflow-auto">
             {currencies.length === 0 ? (
-              <p className={`p-4 text-xs text-center ${mutedText}`}>No matches</p>
+              <p className={`p-4 text-[12px] text-center ${muted}`}>{isNe ? "कुनै परिणाम भेटिएन" : "No matches"}</p>
             ) : currencies.map(c => {
               const isFav = favorites.includes(pairKeyFor(c));
               return (
                 <div
                   key={c}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${dark ? "hover:bg-slate-800" : "hover:bg-slate-50"} ${c === code ? (dark ? "bg-slate-800" : "bg-sky-50") : ""}`}
+                  className={`flex items-center justify-between px-3 py-2 cursor-pointer transition ${dark ? "hover:bg-zinc-900" : "hover:bg-zinc-50"} ${c === code ? (dark ? "bg-zinc-900" : "bg-emerald-50") : ""}`}
                   onClick={() => onSelect(c)}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-lg">{CURRENCY_FLAGS[c] || "🏳️"}</span>
+                    <span className="text-base leading-none">{CURRENCY_FLAGS[c] || "🏳️"}</span>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold">{c}</p>
-                      <p className={`text-[10px] truncate ${mutedText}`}>{CURRENCY_NAMES[c] || c}</p>
+                      <p className="text-[13px] font-semibold tracking-tight">{c}</p>
+                      <p className={`text-[10px] truncate ${muted}`}>{CURRENCY_NAMES[c] || c}</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); toggleFavorite(c); }}
-                    className="p-1 rounded hover:bg-slate-500/10"
+                    className="p-1 rounded hover:bg-zinc-500/10"
                     aria-label="Toggle favorite"
                   >
-                    <Star size={14} className={isFav ? "fill-amber-400 text-amber-400" : mutedText} />
+                    <Star size={13} className={isFav ? "fill-amber-400 text-amber-400" : muted} />
                   </button>
                 </div>
               );
@@ -759,10 +814,25 @@ function CurrencySelector(props: {
   );
 }
 
-function Pill({ children, dark }: { children: React.ReactNode; dark: boolean }) {
+function Tag({ children, dark, hairline }: { children: React.ReactNode; dark: boolean; hairline: string }) {
   return (
-    <div className={`px-3 py-1.5 rounded-lg border text-[11px] font-bold ${dark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-white border-slate-200 text-slate-600"}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full border ${hairline} px-2.5 py-1 text-[11px] font-medium ${dark ? "bg-zinc-950 text-zinc-300" : "bg-white text-zinc-700"}`}>
       {children}
-    </div>
+    </span>
+  );
+}
+
+function CrossLink({ href, label, sub, hairline, dark }: { href: string; label: string; sub: string; hairline: string; dark: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`group flex items-center justify-between rounded-md border ${hairline} px-3 py-2.5 transition ${dark ? "hover:bg-zinc-900" : "hover:bg-zinc-50"}`}
+    >
+      <div className="flex items-center gap-3">
+        <span className={`text-[10px] tabular-nums tracking-widest ${dark ? "text-zinc-500" : "text-zinc-400"}`}>{sub}</span>
+        <span className="text-[13px] font-medium">{label}</span>
+      </div>
+      <ArrowUpRight size={14} className="transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-500" />
+    </Link>
   );
 }
