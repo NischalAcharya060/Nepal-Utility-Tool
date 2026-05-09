@@ -1,12 +1,14 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useMemo, useState } from "react";
+import { THEME_KEY } from "@/lib/theme";
+import ActionModal from "@/components/ui/ActionModal";
 import {
   Languages, ArrowLeftRight, RefreshCw, Maximize2, Minimize2,
   HelpCircle, Settings, Sun, Moon, Globe, ExternalLink, Info
 } from "lucide-react";
-
-const THEME_KEY = "nlc_theme_v1";
 const PAIR_KEY = "nlc_pair_v1";
 
 type LangCode = "ne" | "en" | "hi" | "es" | "fr" | "de" | "zh" | "ja" | "ar";
@@ -32,6 +34,8 @@ export default function LanguageConverter() {
   const [to, setTo] = useState<LangCode>("en");
   const [expanded, setExpanded] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -65,6 +69,16 @@ export default function LanguageConverter() {
     if (from === to) return;
     setFrom(to);
     setTo(from);
+  };
+
+  const resetPreferences = () => {
+    setFrom("ne");
+    setTo("en");
+    setExpanded(false);
+    try {
+      localStorage.removeItem(PAIR_KEY);
+    } catch {}
+    setShowSettings(false);
   };
 
   const themeBg = dark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-800";
@@ -105,8 +119,20 @@ export default function LanguageConverter() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Help"><HelpCircle size={18} /></button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Settings"><Settings size={18} /></button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Help"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </header>
 
@@ -264,6 +290,38 @@ export default function LanguageConverter() {
         <p suppressHydrationWarning>© {new Date().getFullYear()} Language Converter</p>
         <p>Powered by basiconlinetools.com</p>
       </footer>
+
+      <ActionModal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Language Help"
+        dark={dark}
+      >
+        <p>Select your source and target language, then type inside the embedded translator panel.</p>
+        <p>Use quick-pairs for one-tap language combinations and Reload if the embed becomes unresponsive.</p>
+      </ActionModal>
+
+      <ActionModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        title="Language Settings"
+        dark={dark}
+      >
+        <button
+          type="button"
+          onClick={() => setDark(d => !d)}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Toggle theme
+        </button>
+        <button
+          type="button"
+          onClick={resetPreferences}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Reset language preferences
+        </button>
+      </ActionModal>
     </div>
   );
 }

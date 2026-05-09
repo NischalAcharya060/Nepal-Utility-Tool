@@ -1,6 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { THEME_KEY } from "@/lib/theme";
+import ActionModal from "@/components/ui/ActionModal";
 import {
   ArrowLeftRight, RefreshCw, Copy, Check, Search, History, Trash2, Download,
   TrendingUp, AlertCircle, Settings, HelpCircle, Sun, Moon, Wallet, Globe,
@@ -33,7 +37,6 @@ const CACHE_KEY_PREFIX = "ncc_rates_v1_";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const HISTORY_KEY = "ncc_history_v1";
 const FAVS_KEY = "ncc_favs_v1";
-const THEME_KEY = "ncc_theme_v1";
 const RECENT_KEY = "ncc_recent_v1";
 
 const POPULAR_PAIRS: Array<[string, string]> = [
@@ -120,6 +123,8 @@ export default function CurrencyConverter() {
   const [search, setSearch] = useState("");
   const [recentAmounts, setRecentAmounts] = useState<number[]>([]);
   const [openSelect, setOpenSelect] = useState<"from" | "to" | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const fromRef = useRef<HTMLDivElement>(null);
   const toRef = useRef<HTMLDivElement>(null);
 
@@ -269,6 +274,19 @@ export default function CurrencyConverter() {
     URL.revokeObjectURL(url);
   };
 
+  const clearToolData = () => {
+    setHistory([]);
+    setFavorites([]);
+    setRecentAmounts([]);
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+      localStorage.removeItem(FAVS_KEY);
+      localStorage.removeItem(RECENT_KEY);
+      localStorage.removeItem(CACHE_KEY_PREFIX + from);
+    } catch {}
+    setShowSettings(false);
+  };
+
   const updatedLabel = useMemo(() => {
     if (!rates) return "";
     try {
@@ -320,8 +338,20 @@ export default function CurrencyConverter() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Help"><HelpCircle size={18} /></button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Settings"><Settings size={18} /></button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Help"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </header>
 
@@ -581,6 +611,38 @@ export default function CurrencyConverter() {
         <p suppressHydrationWarning>© {new Date().getFullYear()} Currency Converter</p>
         {rates && <p>Base · {rates.base_code} · {Object.keys(rates.rates).length} currencies</p>}
       </footer>
+
+      <ActionModal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Currency Help"
+        dark={dark}
+      >
+        <p>Choose currencies, enter amount, and use Copy to save the latest conversion to your activity log.</p>
+        <p>Use the star icon in currency search to pin favorite pairs. Refresh fetches fresh rates.</p>
+      </ActionModal>
+
+      <ActionModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        title="Currency Settings"
+        dark={dark}
+      >
+        <button
+          type="button"
+          onClick={() => setDark(d => !d)}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Toggle theme
+        </button>
+        <button
+          type="button"
+          onClick={clearToolData}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Clear history, favorites, and recent amounts
+        </button>
+      </ActionModal>
     </div>
   );
 }

@@ -1,13 +1,16 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, UTILITY_HOSTED_URL } from "@/lib/site";
+import { THEME_KEY } from "@/lib/theme";
+import ActionModal from "@/components/ui/ActionModal";
 import {
   Calendar, Wallet, Languages, ArrowRight, Sun, Moon, HelpCircle, Settings,
   Sparkles, Globe, Clock
 } from "lucide-react";
-
-const THEME_KEY = "nut_theme_v1";
 
 type Tool = {
   href: string;
@@ -53,6 +56,8 @@ export default function Home() {
   const [dark, setDark] = useState(false);
   const [now, setNow] = useState<string>("");
   const [mounted, setMounted] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -79,9 +84,22 @@ export default function Home() {
   const mutedText = dark ? "text-slate-400" : "text-slate-500";
   const headerBg = dark ? "bg-slate-950 border-slate-800" : "bg-white border-slate-200";
   const subtleSurface = dark ? "bg-slate-900/60 border-slate-800" : "bg-slate-50/50 border-slate-100";
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    sameAs: [SITE_URL, UTILITY_HOSTED_URL],
+    inLanguage: "en-NP",
+  };
 
   return (
     <div className={`min-h-screen flex-1 ${themeBg} font-sans selection:bg-sky-100 transition-colors`}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className={`${headerBg} border-b px-6 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur`}>
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
@@ -104,8 +122,20 @@ export default function Home() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Help"><HelpCircle size={18} /></button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Settings"><Settings size={18} /></button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Help"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </header>
 
@@ -215,6 +245,44 @@ export default function Home() {
         <p suppressHydrationWarning>© {new Date().getFullYear()} Nepal Utility Tool</p>
         <p>Crafted with care · Made in Nepal</p>
       </footer>
+
+      <ActionModal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Quick Help"
+        dark={dark}
+      >
+        <p>Use the main cards to open each utility. Your selected theme is shared across all tools.</p>
+        <p>The Date, Currency, and Language pages each keep their own tool-specific history and preferences.</p>
+      </ActionModal>
+
+      <ActionModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        title="Home Settings"
+        dark={dark}
+      >
+        <button
+          type="button"
+          onClick={() => setDark(d => !d)}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Toggle theme
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setDark(false);
+            try {
+              localStorage.removeItem(THEME_KEY);
+            } catch {}
+            setShowSettings(false);
+          }}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Reset theme preference
+        </button>
+      </ActionModal>
     </div>
   );
 }

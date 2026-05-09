@@ -1,7 +1,11 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import BikramSambat from "bikram-sambat";
+import { THEME_KEY } from "@/lib/theme";
+import ActionModal from "@/components/ui/ActionModal";
 import {
   History, RotateCw, Copy, Share2, Calendar, Info, HelpCircle, Settings,
   Clock, Timer, ArrowLeftRight, Download, Trash2, ChevronLeft, ChevronRight,
@@ -46,7 +50,6 @@ const AD_MONTHS = [
 const WEEKDAYS_NE = ["आइतबार", "सोमबार", "मंगलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार"];
 
 const HISTORY_KEY = "ndc_history_v1";
-const THEME_KEY = "ndc_theme_v1";
 
 const pad = (n: number) => (n > 9 ? String(n) : "0" + n);
 
@@ -76,6 +79,8 @@ export default function TemporalPrecisionConverter() {
   const [copied, setCopied] = useState(false);
   const [dark, setDark] = useState(false);
   const [todayBS, setTodayBS] = useState<string>("");
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Compute current max day for the active calendar/month
   const maxDay = useMemo(() => {
@@ -316,6 +321,16 @@ export default function TemporalPrecisionConverter() {
     URL.revokeObjectURL(url);
   };
 
+  const clearToolData = () => {
+    setHistory([]);
+    setResult(null);
+    setError("");
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+    } catch {}
+    setShowSettings(false);
+  };
+
   const switchMode = (next: Mode) => {
     if (next === mode) return;
     setMode(next);
@@ -333,7 +348,6 @@ export default function TemporalPrecisionConverter() {
 
   const themeBg = dark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-800";
   const cardBg = dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
-  const subCardBg = dark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200";
   const inputBg = dark
     ? "bg-slate-900 border-slate-700 text-slate-100 focus:border-sky-400 focus:ring-sky-400/20"
     : "bg-white border-slate-200 focus:border-sky-500 focus:ring-sky-500/10";
@@ -365,8 +379,20 @@ export default function TemporalPrecisionConverter() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Help"><HelpCircle size={18} /></button>
-          <button className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors" aria-label="Settings"><Settings size={18} /></button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Help"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </header>
 
@@ -606,6 +632,38 @@ export default function TemporalPrecisionConverter() {
         <p suppressHydrationWarning>© {new Date().getFullYear()} Date Converter</p>
         <p>Press <kbd className={`px-1.5 py-0.5 rounded ${dark ? "bg-slate-800" : "bg-slate-100"}`}>Enter</kbd> to convert</p>
       </footer>
+
+      <ActionModal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Date Help"
+        dark={dark}
+      >
+        <p>Pick a mode, set year/month/day, and execute conversion. Press Enter to convert quickly.</p>
+        <p>Use Today and Swap buttons to speed up common workflows between BS and AD.</p>
+      </ActionModal>
+
+      <ActionModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        title="Date Settings"
+        dark={dark}
+      >
+        <button
+          type="button"
+          onClick={() => setDark(d => !d)}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Toggle theme
+        </button>
+        <button
+          type="button"
+          onClick={clearToolData}
+          className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
+        >
+          Clear conversion history
+        </button>
+      </ActionModal>
 
       <style jsx global>{`
         @keyframes hover-spin {
