@@ -4,10 +4,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { THEME_KEY } from "@/lib/theme";
+import { LANGUAGES, type Language } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 import ActionModal from "@/components/ui/ActionModal";
 import {
   Languages, ArrowLeftRight, RefreshCw, Maximize2, Minimize2,
-  HelpCircle, Settings, Sun, Moon, Globe, ExternalLink, Info
+  HelpCircle, Settings, Sun, Moon, Globe, ExternalLink, Info, Globe2
 } from "lucide-react";
 const PAIR_KEY = "nlc_pair_v1";
 
@@ -28,6 +30,7 @@ const LANGS: Record<LangCode, { label: string; native: string; flag: string }> =
 const LANG_CODES = Object.keys(LANGS) as LangCode[];
 
 export default function LanguageConverter() {
+  const { lang, setLang, t } = useI18n();
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [from, setFrom] = useState<LangCode>("ne");
@@ -96,7 +99,7 @@ export default function LanguageConverter() {
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
             <Languages className="text-sky-500" size={20} />
-            Language Converter
+            {t("languageConverter")}
           </h1>
           <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -105,10 +108,19 @@ export default function LanguageConverter() {
         </div>
         <div className={`flex items-center gap-2 ${mutedText}`}>
           <button
+            onClick={() => setLang(lang === "en" ? "ne" : "en")}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
+            aria-label="Toggle language"
+            title={lang === "en" ? "नेपाली" : "English"}
+          >
+            <Globe2 size={18} />
+            <span className="hidden sm:inline">{LANGUAGES[lang === "en" ? "ne" : "en"].native}</span>
+          </button>
+          <button
             onClick={() => setReloadKey(k => k + 1)}
             className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
             aria-label="Reload"
-            title="Reload translator"
+            title={t("reload")}
           >
             <RefreshCw size={18} />
           </button>
@@ -142,21 +154,21 @@ export default function LanguageConverter() {
             <div className={`p-6 border-b ${dark ? "border-slate-800" : "border-slate-100"} flex items-center justify-between gap-4 flex-wrap`}>
               <div className="flex items-center gap-2">
                 <Globe size={16} className="text-sky-500" />
-                <span className="text-xs font-bold uppercase tracking-widest">Live Translation</span>
+                <span className="text-xs font-bold uppercase tracking-widest">{t("liveTranslation")}</span>
               </div>
               <button
                 onClick={() => setExpanded(e => !e)}
                 className="flex items-center gap-2 text-xs font-bold text-sky-600 uppercase hover:bg-sky-500/10 px-3 py-2 rounded-lg transition-all"
-                title={expanded ? "Collapse" : "Expand"}
+                title={expanded ? t("collapse") : t("expand")}
               >
                 {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                {expanded ? "Collapse" : "Expand"}
+                {expanded ? t("collapse") : t("expand")}
               </button>
             </div>
 
             <div className="p-8 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-end gap-3">
               <LanguageSelect
-                label="From"
+                label={t("from")}
                 value={from}
                 onChange={(c) => setFrom(c)}
                 exclude={to}
@@ -172,7 +184,7 @@ export default function LanguageConverter() {
                 <ArrowLeftRight size={18} />
               </button>
               <LanguageSelect
-                label="To"
+                label={t("to")}
                 value={to}
                 onChange={(c) => setTo(c)}
                 exclude={from}
@@ -198,7 +210,7 @@ export default function LanguageConverter() {
               </div>
               <div className={`px-6 py-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>
                 <span className="flex items-center gap-2">
-                  <Info size={12} /> Embedded service · basiconlinetools.com
+                  <Info size={12} /> {t("embeddedService")}
                 </span>
                 <a
                   href={iframeSrc}
@@ -206,7 +218,7 @@ export default function LanguageConverter() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-sky-600 hover:underline"
                 >
-                  Open in new tab <ExternalLink size={12} />
+                  {t("openInNewTab")} <ExternalLink size={12} />
                 </a>
               </div>
             </div>
@@ -216,9 +228,9 @@ export default function LanguageConverter() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm flex items-center gap-2">
                 <Languages size={16} className="text-sky-500" />
-                Quick Pairs
+                {t("quickPairs")}
               </h3>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>One-tap presets</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{t("oneTapPresets")}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {([
@@ -251,14 +263,14 @@ export default function LanguageConverter() {
           <div className={`${cardBg} p-6 rounded-2xl border shadow-sm`}>
             <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
               <Info size={16} className="text-sky-500" />
-              How it works
+              {t("howItWorks")}
             </h3>
             <ul className="space-y-3">
               {[
-                "Pick the source and target languages from the selectors above.",
-                "Type or paste text in the embedded translator panel.",
-                "Use Swap to flip direction without retyping.",
-                "Reload if the embed becomes unresponsive.",
+                lang === "ne" ? "माथिको चयनकर्ताबाट स्रोत र लक्षित भाषाहरू चयन गर्नुहोस्।" : "Pick the source and target languages from the selectors above.",
+                lang === "ne" ? "एम्बेड गरिएको अनुवादक पैनलमा टेक्स्ट टाइप वा पेस्ट गर्नुहोस्।" : "Type or paste text in the embedded translator panel.",
+                lang === "ne" ? "फेरि टाइप नगरी दिशा फिपाउन Swap प्रयोग गर्नुहोस्।" : "Use Swap to flip direction without retyping.",
+                lang === "ne" ? "एम्बेड अनुत्तरदायी भएमा पुनः लोड गर्नुहोस्।" : "Reload if the embed becomes unresponsive.",
               ].map(item => (
                 <li key={item} className={`flex gap-3 text-xs leading-relaxed ${mutedText}`}>
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
@@ -277,9 +289,9 @@ export default function LanguageConverter() {
             />
             <div className="relative z-20 space-y-3">
               <div className="w-8 h-1 bg-sky-500 rounded-full" />
-              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">Language Insight</p>
+              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">{t("languageInsight")}</p>
               <p className="text-sm leading-relaxed text-slate-200 font-medium">
-                Translation runs in a sandboxed embed from basiconlinetools.com. Your text stays inside that frame — we never read or store it.
+                {t("languageInsightDesc")}
               </p>
             </div>
           </div>
@@ -287,39 +299,53 @@ export default function LanguageConverter() {
       </main>
 
       <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p suppressHydrationWarning>© {new Date().getFullYear()} Language Converter</p>
-        <p>Powered by basiconlinetools.com</p>
+        <p suppressHydrationWarning>© {new Date().getFullYear()} {t("languageConverter")}</p>
+        <p>{lang === "ne" ? "basiconlinetools.com द्वारा संचालित" : "Powered by basiconlinetools.com"}</p>
       </footer>
 
       <ActionModal
         open={showHelp}
         onClose={() => setShowHelp(false)}
-        title="Language Help"
+        title={t("languageHelp")}
         dark={dark}
       >
-        <p>Select your source and target language, then type inside the embedded translator panel.</p>
-        <p>Use quick-pairs for one-tap language combinations and Reload if the embed becomes unresponsive.</p>
+        <p>{t("languageHelpDesc1")}</p>
+        <p>{t("languageHelpDesc2")}</p>
       </ActionModal>
 
       <ActionModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
-        title="Language Settings"
+        title={t("languageSettings")}
         dark={dark}
       >
+        <div className="flex items-center gap-3 px-3 py-2 border rounded-lg">
+          <Globe2 size={16} />
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as Language)}
+            className="bg-transparent outline-none text-sm font-semibold flex-1 cursor-pointer"
+          >
+            {Object.entries(LANGUAGES).map(([code, info]) => (
+              <option key={code} value={code} className={dark ? "bg-slate-900 text-white" : "bg-white text-slate-800"}>
+                {info.label} · {info.native}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="button"
           onClick={() => setDark(d => !d)}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Toggle theme
+          {t("toggleTheme")}
         </button>
         <button
           type="button"
           onClick={resetPreferences}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Reset language preferences
+          {t("resetLanguagePreferences")}
         </button>
       </ActionModal>
     </div>

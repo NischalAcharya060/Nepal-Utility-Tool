@@ -6,17 +6,19 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, UTILITY_HOSTED_URL } from "@/lib/site";
 import { THEME_KEY } from "@/lib/theme";
+import { LANGUAGES, type Language } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 import ActionModal from "@/components/ui/ActionModal";
 import {
   Calendar, Wallet, Languages, ArrowRight, Sun, Moon, HelpCircle, Settings,
-  Sparkles, Globe, Clock
+  Sparkles, Globe, Clock, Globe2
 } from "lucide-react";
 
 type Tool = {
   href: string;
-  title: string;
-  tag: string;
-  description: string;
+  titleKey: string;
+  tagKey: string;
+  descriptionKey: string;
   icon: React.ReactNode;
   accent: string;
   available: boolean;
@@ -25,34 +27,50 @@ type Tool = {
 const TOOLS: Tool[] = [
   {
     href: "/convert_date",
-    title: "Date Converter",
-    tag: "BS ⇄ AD",
-    description: "Convert between Bikram Sambat and Gregorian calendars with weekday, relative time, and Devanagari output.",
+    titleKey: "dateConverter",
+    tagKey: "bsToAd",
+    descriptionKey: "dateDescription",
     icon: <Calendar size={22} />,
     accent: "from-sky-500/20 to-sky-500/0",
     available: true,
   },
   {
     href: "/convert_currency",
-    title: "Currency Converter",
-    tag: "Live Rates",
-    description: "Live exchange rates with NPR-focused popular pairs, favorites, history, and CSV export.",
+    titleKey: "currencyConverter",
+    tagKey: "live",
+    descriptionKey: "currencyDescription",
     icon: <Wallet size={22} />,
     accent: "from-emerald-500/20 to-emerald-500/0",
     available: true,
   },
   {
     href: "/convert_language",
-    title: "Language Converter",
-    tag: "Translate",
-    description: "Translate between Nepali, English, Hindi and more — with quick swap and one-tap language pairs.",
+    titleKey: "languageConverter",
+    tagKey: "translate",
+    descriptionKey: "languageDescription",
     icon: <Languages size={22} />,
     accent: "from-violet-500/20 to-violet-500/0",
     available: true,
   },
 ];
 
+const TOOL_TEXTS: Record<string, Record<Language, { title: string; tag: string; description: string }>> = {
+  dateConverter: {
+    en: { title: "Date Converter", tag: "BS ⇄ AD", description: "Convert between Bikram Sambat and Gregorian calendars with weekday, relative time, and Devanagari output." },
+    ne: { title: "मिति रूपान्तरक", tag: "विक्रम ⇄ अंग्रेजी", description: "विक्रम संवत् र ग्रेगोरियन क्यालेन्डरहरू बीच हप्ताको दिन, सापेक्ष समय, र देवनागरी आउटपुटसहित रूपान्तरण गर्नुहोस्।" },
+  },
+  currencyConverter: {
+    en: { title: "Currency Converter", tag: "Live Rates", description: "Live exchange rates with NPR-focused popular pairs, favorites, history, and CSV export." },
+    ne: { title: "मुद्रा रूपान्तरक", tag: "लाइभ दरहरू", description: "NPR केन्द्रित लोकप्रिय जोडीहरू, मनपर्ने, इतिहास, र CSV निर्यातसहित लाइभ विनिमय दरहरू।" },
+  },
+  languageConverter: {
+    en: { title: "Language Converter", tag: "Translate", description: "Translate between Nepali, English, Hindi and more — with quick swap and one-tap language pairs." },
+    ne: { title: "भाषा रूपान्तरक", tag: "अनुवाद", description: "छिटो स्वाप र एक-ट्याप भाषा जोडीहरूसहित नेपाली, अंग्रेजी, हिन्दी र थप बीच अनुवाद गर्नुहोस्।" },
+  },
+};
+
 export default function Home() {
+  const { lang, setLang, t } = useI18n();
   const [dark, setDark] = useState(false);
   const [now, setNow] = useState<string>("");
   const [mounted, setMounted] = useState(false);
@@ -62,8 +80,8 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     try {
-      const t = localStorage.getItem(THEME_KEY);
-      if (t === "dark") setDark(true);
+      const th = localStorage.getItem(THEME_KEY);
+      if (th === "dark") setDark(true);
     } catch {}
   }, []);
 
@@ -73,11 +91,11 @@ export default function Home() {
   }, [dark, mounted]);
 
   useEffect(() => {
-    const update = () => setNow(new Date().toLocaleString([], { dateStyle: "medium", timeStyle: "short" }));
+    const update = () => setNow(new Date().toLocaleString(lang === "ne" ? "ne-NP" : "en-US", { dateStyle: "medium", timeStyle: "short" }));
     update();
     const id = setInterval(update, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [lang]);
 
   const themeBg = dark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-800";
   const cardBg = dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200";
@@ -91,7 +109,7 @@ export default function Home() {
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     sameAs: [SITE_URL, UTILITY_HOSTED_URL],
-    inLanguage: "en-NP",
+    inLanguage: lang === "ne" ? "ne-NP" : "en-US",
   };
 
   return (
@@ -104,7 +122,7 @@ export default function Home() {
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
             <Sparkles className="text-sky-500" size={20} />
-            Nepal Utility Tool
+            {t("siteName")}
           </h1>
           {mounted && now && (
             <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`} suppressHydrationWarning>
@@ -114,6 +132,15 @@ export default function Home() {
           )}
         </div>
         <div className={`flex items-center gap-2 ${mutedText}`}>
+          <button
+            onClick={() => setLang(lang === "en" ? "ne" : "en")}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
+            aria-label="Toggle language"
+            title={lang === "en" ? "नेपाली" : "English"}
+          >
+            <Globe2 size={18} />
+            <span className="hidden sm:inline">{LANGUAGES[lang === "en" ? "ne" : "en"].native}</span>
+          </button>
           <button
             onClick={() => setDark(d => !d)}
             className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
@@ -145,44 +172,47 @@ export default function Home() {
             <div className={`p-6 border-b ${dark ? "border-slate-800" : "border-slate-100"} flex items-center justify-between`}>
               <div className="flex items-center gap-2">
                 <Globe size={16} className="text-sky-500" />
-                <span className="text-xs font-bold uppercase tracking-widest">Available Utilities</span>
+                <span className="text-xs font-bold uppercase tracking-widest">{t("availableTools")}</span>
               </div>
               <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>
-                {TOOLS.filter(t => t.available).length} tools
+                {TOOLS.filter(t => t.available).length} {t("tools")}
               </span>
             </div>
 
             <div className="p-6 md:p-8 grid gap-4 md:grid-cols-2">
-              {TOOLS.map(tool => (
-                <Link
-                  key={tool.href}
-                  href={tool.href}
-                  className={`group relative overflow-hidden rounded-2xl border ${subtleSurface} p-6 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-sky-300`}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${tool.accent} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                  <div className="relative space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${dark ? "bg-slate-800 text-sky-400" : "bg-sky-50 text-sky-600"}`}>
-                        {tool.icon}
+              {TOOLS.map(tool => {
+                const texts = TOOL_TEXTS[tool.titleKey][lang];
+                return (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    className={`group relative overflow-hidden rounded-2xl border ${subtleSurface} p-6 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-sky-300`}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.accent} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                    <div className="relative space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${dark ? "bg-slate-800 text-sky-400" : "bg-sky-50 text-sky-600"}`}>
+                          {tool.icon}
+                        </div>
+                        <span className={`text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-widest ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
+                          {texts.tag}
+                        </span>
                       </div>
-                      <span className={`text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-widest ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
-                        {tool.tag}
-                      </span>
+                      <div className="space-y-1">
+                        <h3 className={`text-lg font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>
+                          {texts.title}
+                        </h3>
+                        <p className={`text-xs leading-relaxed ${mutedText}`}>
+                          {texts.description}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-sky-600 group-hover:gap-3 transition-all">
+                        {t("openTool")} <ArrowRight size={14} />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className={`text-lg font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>
-                        {tool.title}
-                      </h3>
-                      <p className={`text-xs leading-relaxed ${mutedText}`}>
-                        {tool.description}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-sky-600 group-hover:gap-3 transition-all">
-                      Open tool <ArrowRight size={14} />
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
@@ -190,14 +220,12 @@ export default function Home() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm flex items-center gap-2">
                 <Clock size={16} className="text-sky-500" />
-                Why this exists
+                {t("whyThisExists")}
               </h3>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>Built for Nepal</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{t("builtForNepal")}</span>
             </div>
             <p className={`text-sm leading-relaxed ${mutedText}`}>
-              A growing collection of practical utilities that handle the small frictions of daily Nepali life — calendar gaps,
-              currency math, and more on the way. Every tool shares the same fast, keyboard-friendly experience with offline-aware
-              caching and dark mode.
+              {t("whyThisExistsDesc")}
             </p>
           </div>
         </div>
@@ -206,14 +234,14 @@ export default function Home() {
           <div className={`${cardBg} p-6 rounded-2xl border shadow-sm`}>
             <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
               <Sparkles size={16} className="text-amber-400" />
-              Quick Highlights
+              {t("quickHighlights")}
             </h3>
             <ul className="space-y-3">
               {[
-                "BS dates from 1970 to 2099 supported",
-                "Live FX rates cached locally for one hour",
-                "Activity log with CSV export per tool",
-                "Keyboard-first with dark mode persistence",
+                t("bsDatesSupport"),
+                t("liveFxRates"),
+                t("activityLogExport"),
+                t("keyboardFirst"),
               ].map(item => (
                 <li key={item} className={`flex gap-3 text-xs leading-relaxed ${mutedText}`}>
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
@@ -232,9 +260,11 @@ export default function Home() {
             />
             <div className="relative z-20 space-y-3">
               <div className="w-8 h-1 bg-sky-500 rounded-full" />
-              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">Local Insight</p>
+              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">{lang === "ne" ? "स्थानीय अन्तरदृष्टि" : "Local Insight"}</p>
               <p className="text-sm leading-relaxed text-slate-200 font-medium">
-                From the Bikram Sambat calendar to the daily NPR exchange swing — these tools speak the language Nepal already uses.
+                {lang === "ne"
+                  ? "विक्रम संवत् क्यालेन्डरदेखि दैनिक NPR विनिमय स्विङसम्म — यी उपकरणहरूले नेपालले पहिले नै प्रयोग गर्ने भाषा बोल्छन्।"
+                  : "From the Bikram Sambat calendar to the daily NPR exchange swing — these tools speak the language Nepal already uses."}
               </p>
             </div>
           </div>
@@ -242,45 +272,57 @@ export default function Home() {
       </main>
 
       <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p suppressHydrationWarning>© {new Date().getFullYear()} Nepal Utility Tool</p>
-        <p>Crafted with care · Made in Nepal</p>
+        <p suppressHydrationWarning>© {new Date().getFullYear()} {t("siteName")}</p>
+        <p>{t("craftedWithCare")}</p>
       </footer>
 
       <ActionModal
         open={showHelp}
         onClose={() => setShowHelp(false)}
-        title="Quick Help"
+        title={t("quickHelp")}
         dark={dark}
       >
-        <p>Use the main cards to open each utility. Your selected theme is shared across all tools.</p>
-        <p>The Date, Currency, and Language pages each keep their own tool-specific history and preferences.</p>
+        <p>{t("useMainCards")}</p>
+        <p>{t("toolSpecificHistory")}</p>
       </ActionModal>
 
       <ActionModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
-        title="Home Settings"
+        title={t("homeSettings")}
         dark={dark}
       >
+        <div className="flex items-center gap-3 px-3 py-2 border rounded-lg">
+          <Globe2 size={16} />
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as Language)}
+            className="bg-transparent outline-none text-sm font-semibold flex-1 cursor-pointer"
+          >
+            {Object.entries(LANGUAGES).map(([code, info]) => (
+              <option key={code} value={code} className={dark ? "bg-slate-900 text-white" : "bg-white text-slate-800"}>
+                {info.label} · {info.native}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="button"
           onClick={() => setDark(d => !d)}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Toggle theme
+          {t("toggleTheme")}
         </button>
         <button
           type="button"
           onClick={() => {
             setDark(false);
-            try {
-              localStorage.removeItem(THEME_KEY);
-            } catch {}
+            try { localStorage.removeItem(THEME_KEY); } catch {}
             setShowSettings(false);
           }}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Reset theme preference
+          {t("resetThemePreference")}
         </button>
       </ActionModal>
     </div>

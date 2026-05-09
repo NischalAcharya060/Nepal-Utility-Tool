@@ -5,11 +5,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import BikramSambat from "bikram-sambat";
 import { THEME_KEY } from "@/lib/theme";
+import { LANGUAGES, type Language } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 import ActionModal from "@/components/ui/ActionModal";
 import {
   History, RotateCw, Copy, Share2, Calendar, Info, HelpCircle, Settings,
   Clock, Timer, ArrowLeftRight, Download, Trash2, ChevronLeft, ChevronRight,
-  Check, Sun, Moon
+  Check, Sun, Moon, Globe2
 } from "lucide-react";
 
 type Mode = "BS to AD" | "AD to BS";
@@ -69,6 +71,7 @@ const adToBs = (date: Date) => {
 };
 
 export default function TemporalPrecisionConverter() {
+  const { lang, setLang, t } = useI18n();
   const [mode, setMode] = useState<Mode>("BS to AD");
   const [year, setYear] = useState(2083);
   const [month, setMonth] = useState(1);
@@ -361,16 +364,25 @@ export default function TemporalPrecisionConverter() {
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
             <Calendar className="text-sky-500" size={20} />
-            Date Converter
+            {t("dateConverter")}
           </h1>
           {todayBS && (
             <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`} suppressHydrationWarning>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Today · {todayBS} BS
+              {t("today")} · {todayBS} BS
             </div>
           )}
         </div>
         <div className={`flex items-center gap-3 ${mutedText}`}>
+          <button
+            onClick={() => setLang(lang === "en" ? "ne" : "en")}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
+            aria-label="Toggle language"
+            title={lang === "en" ? "नेपाली" : "English"}
+          >
+            <Globe2 size={18} />
+            <span className="hidden sm:inline">{LANGUAGES[lang === "en" ? "ne" : "en"].native}</span>
+          </button>
           <button
             onClick={() => setDark(d => !d)}
             className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors"
@@ -406,13 +418,13 @@ export default function TemporalPrecisionConverter() {
                   onClick={() => switchMode("BS to AD")}
                   className={`flex-1 sm:flex-none px-8 py-2.5 text-xs font-bold rounded-lg transition-all ${mode === "BS to AD" ? "bg-black text-white shadow-lg" : `${mutedText} hover:bg-slate-500/10`}`}
                 >
-                  BS TO AD
+                  {t("bsToAdFull")}
                 </button>
                 <button
                   onClick={() => switchMode("AD to BS")}
                   className={`flex-1 sm:flex-none px-8 py-2.5 text-xs font-bold rounded-lg transition-all ${mode === "AD to BS" ? "bg-black text-white shadow-lg" : `${mutedText} hover:bg-slate-500/10`}`}
                 >
-                  AD TO BS
+                  {t("adToBs")}
                 </button>
               </div>
               <div className="flex items-center gap-2">
@@ -421,13 +433,13 @@ export default function TemporalPrecisionConverter() {
                   className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase hover:bg-slate-500/10 px-3 py-2 rounded-lg transition-all"
                   title="Swap conversion direction"
                 >
-                  <ArrowLeftRight size={14} /> Swap
+                  <ArrowLeftRight size={14} /> {t("swap")}
                 </button>
                 <button
                   onClick={handleSetToday}
                   className="flex items-center gap-2 text-xs font-bold text-sky-600 uppercase hover:bg-sky-500/10 px-3 py-2 rounded-lg transition-all"
                 >
-                  <Clock size={14} /> Today
+                  <Clock size={14} /> {t("today")}
                 </button>
               </div>
             </div>
@@ -435,7 +447,7 @@ export default function TemporalPrecisionConverter() {
             {/* Inputs */}
             <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="group space-y-2">
-                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} group-focus-within:text-sky-500 transition-colors`}>Year</label>
+                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} group-focus-within:text-sky-500 transition-colors`}>{t("year")}</label>
                 <input
                   type="number"
                   value={year}
@@ -447,7 +459,7 @@ export default function TemporalPrecisionConverter() {
                 <p className={`text-[10px] ${mutedText}`}>{yearMin} – {yearMax}</p>
               </div>
               <div className="group space-y-2">
-                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} group-focus-within:text-sky-500 transition-colors`}>Month</label>
+                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} group-focus-within:text-sky-500 transition-colors`}>{t("month")}</label>
                 <select
                   className={`w-full border ${inputBg} rounded-xl p-4 text-sm outline-none focus:ring-4 transition-all font-medium appearance-none cursor-pointer`}
                   value={month}
@@ -457,10 +469,10 @@ export default function TemporalPrecisionConverter() {
                     <option key={m} value={i + 1}>{i + 1}. {m}</option>
                   ))}
                 </select>
-                <p className={`text-[10px] ${mutedText}`}>{maxDay} days</p>
+                <p className={`text-[10px] ${mutedText}`}>{maxDay} {lang === "ne" ? "दिन" : "days"}</p>
               </div>
               <div className="group space-y-2">
-                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} group-focus-within:text-sky-500 transition-colors`}>Day</label>
+                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} group-focus-within:text-sky-500 transition-colors`}>{t("day")}</label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -501,8 +513,8 @@ export default function TemporalPrecisionConverter() {
                 onClick={handleConvert}
                 className="w-full bg-black text-white py-5 rounded-xl text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.99]"
               >
-                <RotateCw size={18} className="animate-hover-spin" /> Execute Conversion
-                <span className="hidden md:inline text-[10px] opacity-50 ml-2">↵ Enter</span>
+                <RotateCw size={18} className="animate-hover-spin" /> {t("executeConversion")}
+                <span className="hidden md:inline text-[10px] opacity-50 ml-2">↵ {t("enter")}</span>
               </button>
             </div>
 
@@ -513,7 +525,7 @@ export default function TemporalPrecisionConverter() {
                   <div className="space-y-4 flex-1 min-w-0">
                     <div>
                       <p className="text-[10px] font-bold text-sky-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Info size={12} /> Target Date
+                        <Info size={12} /> {t("targetDate")}
                       </p>
                       <h2 className={`text-3xl font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>{result.date}</h2>
                       <p className={`text-base mt-1 ${mutedText}`} lang="ne">{result.nepali}</p>
@@ -530,7 +542,7 @@ export default function TemporalPrecisionConverter() {
                       onClick={handleCopy}
                       className={`flex-1 sm:flex-none px-6 py-3 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${copied ? "bg-emerald-500 text-white shadow-emerald-100" : "bg-[#4AC4F3] hover:bg-[#3bb1e0] text-white shadow-sky-100"}`}
                     >
-                      {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Copied" : "Copy"}
+                      {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? t("copied") : t("copy")}
                     </button>
                     <button
                       onClick={handleShare}
@@ -552,7 +564,7 @@ export default function TemporalPrecisionConverter() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <History size={18} className={mutedText} />
-                <h3 className="font-bold text-sm">Activity Log</h3>
+                <h3 className="font-bold text-sm">{t("activityLog")}</h3>
                 {history.length > 0 && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
                     {history.length}
@@ -587,7 +599,7 @@ export default function TemporalPrecisionConverter() {
                   <div className={`w-12 h-12 ${dark ? "bg-slate-800" : "bg-slate-50"} rounded-full flex items-center justify-center mb-3`}>
                     <Clock className={dark ? "text-slate-600" : "text-slate-200"} size={24} />
                   </div>
-                  <p className={`text-xs italic px-4 ${mutedText}`}>Your recent conversions will appear here for quick reference.</p>
+                  <p className={`text-xs italic px-4 ${mutedText}`}>{t("noHistoryYet")}</p>
                 </div>
               ) : (
                 history.map((item) => (
@@ -619,9 +631,9 @@ export default function TemporalPrecisionConverter() {
             />
             <div className="relative z-20 space-y-3">
               <div className="w-8 h-1 bg-sky-500 rounded-full"></div>
-              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">Calendar Insight</p>
+              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">{t("calendarInsight")}</p>
               <p className="text-sm leading-relaxed text-slate-200 font-medium">
-                The Bikram Sambat is a solar calendar based on ancient Hindu tradition. It is officially used in Nepal and is approximately 56 years and 8 months ahead of the AD calendar.
+                {t("bsCalendarDesc")}
               </p>
             </div>
           </div>
@@ -629,39 +641,53 @@ export default function TemporalPrecisionConverter() {
       </main>
 
       <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p suppressHydrationWarning>© {new Date().getFullYear()} Date Converter</p>
-        <p>Press <kbd className={`px-1.5 py-0.5 rounded ${dark ? "bg-slate-800" : "bg-slate-100"}`}>Enter</kbd> to convert</p>
+        <p suppressHydrationWarning>© {new Date().getFullYear()} {t("dateConverter")}</p>
+        <p>{lang === "ne" ? "थिच्नुहोस्" : "Press"} <kbd className={`px-1.5 py-0.5 rounded ${dark ? "bg-slate-800" : "bg-slate-100"}`}>{t("enter")}</kbd> {lang === "ne" ? "रूपान्तरण गर्न" : "to convert"}</p>
       </footer>
 
       <ActionModal
         open={showHelp}
         onClose={() => setShowHelp(false)}
-        title="Date Help"
+        title={t("dateHelp")}
         dark={dark}
       >
-        <p>Pick a mode, set year/month/day, and execute conversion. Press Enter to convert quickly.</p>
-        <p>Use Today and Swap buttons to speed up common workflows between BS and AD.</p>
+        <p>{t("dateHelpDesc1")}</p>
+        <p>{t("dateHelpDesc2")}</p>
       </ActionModal>
 
       <ActionModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
-        title="Date Settings"
+        title={t("dateSettings")}
         dark={dark}
       >
+        <div className="flex items-center gap-3 px-3 py-2 border rounded-lg">
+          <Globe2 size={16} />
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as Language)}
+            className="bg-transparent outline-none text-sm font-semibold flex-1 cursor-pointer"
+          >
+            {Object.entries(LANGUAGES).map(([code, info]) => (
+              <option key={code} value={code} className={dark ? "bg-slate-900 text-white" : "bg-white text-slate-800"}>
+                {info.label} · {info.native}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="button"
           onClick={() => setDark(d => !d)}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Toggle theme
+          {t("toggleTheme")}
         </button>
         <button
           type="button"
           onClick={clearToolData}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Clear conversion history
+          {t("clearConversionHistory")}
         </button>
       </ActionModal>
 

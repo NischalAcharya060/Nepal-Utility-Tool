@@ -4,11 +4,13 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { THEME_KEY } from "@/lib/theme";
+import { LANGUAGES, type Language } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n-context";
 import ActionModal from "@/components/ui/ActionModal";
 import {
   ArrowLeftRight, RefreshCw, Copy, Check, Search, History, Trash2, Download,
   TrendingUp, AlertCircle, Settings, HelpCircle, Sun, Moon, Wallet, Globe,
-  ChevronDown, Star
+  ChevronDown, Star, Globe2
 } from "lucide-react";
 
 type RatesResponse = {
@@ -110,6 +112,7 @@ async function fetchRates(base: string): Promise<RatesResponse> {
 }
 
 export default function CurrencyConverter() {
+  const { lang, setLang, t } = useI18n();
   const [from, setFrom] = useState("USD");
   const [to, setTo] = useState("NPR");
   const [amount, setAmount] = useState<string>("100");
@@ -312,16 +315,25 @@ export default function CurrencyConverter() {
         <div className="flex items-center gap-6">
           <h1 className="text-lg font-bold tracking-tighter uppercase flex items-center gap-2">
             <Wallet className="text-sky-500" size={20} />
-            Currency Converter
+            {t("currencyConverter")}
           </h1>
           {rates && (
             <div className={`hidden md:flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest ${mutedText}`} suppressHydrationWarning>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live · Updated {updatedLabel}
+              {t("live")} · {lang === "ne" ? "अपडेट" : "Updated"} {updatedLabel}
             </div>
           )}
         </div>
         <div className={`flex items-center gap-2 ${mutedText}`}>
+          <button
+            onClick={() => setLang(lang === "en" ? "ne" : "en")}
+            className="p-2 rounded-lg hover:bg-slate-500/10 transition-colors flex items-center gap-1.5 text-xs font-bold"
+            aria-label="Toggle language"
+            title={lang === "en" ? "नेपाली" : "English"}
+          >
+            <Globe2 size={18} />
+            <span className="hidden sm:inline">{LANGUAGES[lang === "en" ? "ne" : "en"].native}</span>
+          </button>
           <button
             onClick={() => loadRates(from, true)}
             disabled={loading}
@@ -362,7 +374,7 @@ export default function CurrencyConverter() {
             <div className={`p-6 border-b ${dark ? "border-slate-800" : "border-slate-100"} flex flex-wrap items-center justify-between gap-3`}>
               <div className="flex items-center gap-2">
                 <Globe size={16} className="text-sky-500" />
-                <span className="text-xs font-bold uppercase tracking-widest">Live Exchange Rates</span>
+                <span className="text-xs font-bold uppercase tracking-widest">{t("liveExchangeRates")}</span>
               </div>
               <div className={`text-[10px] font-semibold ${mutedText}`}>
                 Source: exchangerate-api.com
@@ -372,7 +384,7 @@ export default function CurrencyConverter() {
             {/* Amount */}
             <div className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>Amount</label>
+                <label className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{t("amount")}</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -383,7 +395,7 @@ export default function CurrencyConverter() {
                 />
                 {recentAmounts.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} self-center`}>Recent:</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText} self-center`}>{lang === "ne" ? "हालका:" : "Recent:"}</span>
                     {recentAmounts.map(a => (
                       <button
                         key={a}
@@ -400,7 +412,7 @@ export default function CurrencyConverter() {
               {/* From / Swap / To */}
               <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-start gap-3">
                 <CurrencySelector
-                  label="From"
+                  label={t("from")}
                   code={from}
                   open={openSelect === "from"}
                   onOpen={() => { setOpenSelect(openSelect === "from" ? null : "from"); setSearch(""); }}
@@ -427,7 +439,7 @@ export default function CurrencyConverter() {
                 </button>
 
                 <CurrencySelector
-                  label="To"
+                  label={t("to")}
                   code={to}
                   open={openSelect === "to"}
                   onOpen={() => { setOpenSelect(openSelect === "to" ? null : "to"); setSearch(""); }}
@@ -457,10 +469,10 @@ export default function CurrencyConverter() {
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="space-y-3 flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-sky-600 uppercase tracking-widest flex items-center gap-2">
-                    <TrendingUp size={12} /> {numericAmount > 0 ? formatPlain(numericAmount) : "0"} {from} equals
+                    <TrendingUp size={12} /> {numericAmount > 0 ? formatPlain(numericAmount) : "0"} {from} {t("equals")}
                   </p>
                   <h2 className={`text-3xl md:text-4xl font-bold tracking-tight break-words ${dark ? "text-white" : "text-slate-900"}`}>
-                    {loading && !rates ? "Loading..." : rate ? formatNumber(converted, to) : "—"}
+                    {loading && !rates ? t("loading") : rate ? formatNumber(converted, to) : "—"}
                   </h2>
                   {rate > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -475,7 +487,7 @@ export default function CurrencyConverter() {
                     disabled={!rate}
                     className={`px-6 py-3 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${copied ? "bg-emerald-500 text-white shadow-emerald-100" : "bg-[#4AC4F3] hover:bg-[#3bb1e0] text-white shadow-sky-100"}`}
                   >
-                    {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Saved" : "Copy"}
+                    {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? t("saved") : t("copy")}
                   </button>
                 </div>
               </div>
@@ -487,32 +499,32 @@ export default function CurrencyConverter() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm flex items-center gap-2">
                 <Star size={16} className="text-amber-400" />
-                {favorites.length > 0 ? "Favorites & Popular" : "Popular Pairs"}
+                {favorites.length > 0 ? t("favoritesPopular") : t("popularPairs")}
               </h3>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>NPR Focused</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${mutedText}`}>{t("nprFocused")}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[...favorites.map(f => f.split("-") as [string, string]), ...POPULAR_PAIRS]
                 .filter((p, i, arr) => arr.findIndex(q => q[0] === p[0] && q[1] === p[1]) === i)
                 .slice(0, 8)
-                .map(([f, t]) => {
-                  const r = rates && f === rates.base_code ? rates.rates[t] : null;
-                  const isActive = from === f && to === t;
+                .map(([f, toCode]) => {
+                  const r = rates && f === rates.base_code ? rates.rates[toCode] : null;
+                  const isActive = from === f && to === toCode;
                   return (
                     <button
-                      key={`${f}-${t}`}
-                      onClick={() => { setFrom(f); setTo(t); }}
+                      key={`${f}-${toCode}`}
+                      onClick={() => { setFrom(f); setTo(toCode); }}
                       className={`p-3 rounded-xl border text-left transition-all ${isActive
                         ? "border-sky-500 bg-sky-500/10"
                         : `${subtleSurface} hover:border-sky-300`}`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-bold">
-                          {CURRENCY_FLAGS[f] || ""} {f} → {CURRENCY_FLAGS[t] || ""} {t}
+                          {CURRENCY_FLAGS[f] || ""} {f} → {CURRENCY_FLAGS[toCode] || ""} {toCode}
                         </span>
                       </div>
                       <p className={`text-[11px] font-semibold ${mutedText}`}>
-                        {r ? `1 = ${formatPlain(r)}` : "Tap to view"}
+                        {r ? `1 = ${formatPlain(r)}` : t("tapToView")}
                       </p>
                     </button>
                   );
@@ -527,7 +539,7 @@ export default function CurrencyConverter() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <History size={18} className={mutedText} />
-                <h3 className="font-bold text-sm">Activity Log</h3>
+                <h3 className="font-bold text-sm">{t("activityLog")}</h3>
                 {history.length > 0 && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
                     {history.length}
@@ -562,7 +574,7 @@ export default function CurrencyConverter() {
                   <div className={`w-12 h-12 ${dark ? "bg-slate-800" : "bg-slate-50"} rounded-full flex items-center justify-center mb-3`}>
                     <Wallet className={dark ? "text-slate-600" : "text-slate-200"} size={24} />
                   </div>
-                  <p className={`text-xs italic px-4 ${mutedText}`}>Copied conversions will appear here for quick reference.</p>
+                  <p className={`text-xs italic px-4 ${mutedText}`}>{t("copiedConversionsAppear")}</p>
                 </div>
               ) : (
                 history.map(item => (
@@ -598,9 +610,9 @@ export default function CurrencyConverter() {
             />
             <div className="relative z-20 space-y-3">
               <div className="w-8 h-1 bg-sky-500 rounded-full" />
-              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">Forex Insight</p>
+              <p className="text-[10px] font-bold uppercase text-sky-400 tracking-[0.2em]">{t("forexInsight")}</p>
               <p className="text-sm leading-relaxed text-slate-200 font-medium">
-                Rates are pulled live from exchangerate-api.com and refreshed every 24 hours. Cached locally for one hour to keep the app responsive.
+                {t("forexInsightDesc")}
               </p>
             </div>
           </div>
@@ -608,39 +620,53 @@ export default function CurrencyConverter() {
       </main>
 
       <footer className={`max-w-6xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] border-t mt-8 ${dark ? "border-slate-800 text-slate-500" : "border-slate-100 text-slate-400"}`}>
-        <p suppressHydrationWarning>© {new Date().getFullYear()} Currency Converter</p>
-        {rates && <p>Base · {rates.base_code} · {Object.keys(rates.rates).length} currencies</p>}
+        <p suppressHydrationWarning>© {new Date().getFullYear()} {t("currencyConverter")}</p>
+        {rates && <p>{t("base")} · {rates.base_code} · {Object.keys(rates.rates).length} {t("currencies")}</p>}
       </footer>
 
       <ActionModal
         open={showHelp}
         onClose={() => setShowHelp(false)}
-        title="Currency Help"
+        title={t("currencyHelp")}
         dark={dark}
       >
-        <p>Choose currencies, enter amount, and use Copy to save the latest conversion to your activity log.</p>
-        <p>Use the star icon in currency search to pin favorite pairs. Refresh fetches fresh rates.</p>
+        <p>{t("currencyHelpDesc1")}</p>
+        <p>{t("currencyHelpDesc2")}</p>
       </ActionModal>
 
       <ActionModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
-        title="Currency Settings"
+        title={t("currencySettings")}
         dark={dark}
       >
+        <div className="flex items-center gap-3 px-3 py-2 border rounded-lg">
+          <Globe2 size={16} />
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as Language)}
+            className="bg-transparent outline-none text-sm font-semibold flex-1 cursor-pointer"
+          >
+            {Object.entries(LANGUAGES).map(([code, info]) => (
+              <option key={code} value={code} className={dark ? "bg-slate-900 text-white" : "bg-white text-slate-800"}>
+                {info.label} · {info.native}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="button"
           onClick={() => setDark(d => !d)}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Toggle theme
+          {t("toggleTheme")}
         </button>
         <button
           type="button"
           onClick={clearToolData}
           className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-semibold ${dark ? "border-slate-700 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-50"}`}
         >
-          Clear history, favorites, and recent amounts
+          {t("clearHistoryFavorites")}
         </button>
       </ActionModal>
     </div>
