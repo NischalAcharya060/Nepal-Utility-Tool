@@ -2,8 +2,8 @@ export const SITE_NAME = "Nepal Utility Tool";
 export const SITE_DESCRIPTION =
   "Clean and fast Nepal-focused utility tools for BS/AD date conversion, live currency conversion, and language translation.";
 
-export const SITE_URL = "https://acharyanischal.com.np";
-export const UTILITY_HOSTED_URL = "https://utility-tool/acharyanischal.com.np/";
+export const SITE_URL = "https://utility.acharyanischal.com.np";
+export const UTILITY_HOSTED_URL = "https://utility.acharyanischal.com.np";
 
 export const SITE_KEYWORDS = [
   "Nepal utility tool",
