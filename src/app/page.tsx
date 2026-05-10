@@ -9,7 +9,7 @@ import { LANGUAGES, type Language } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n-context";
 import ActionModal from "@/components/ui/ActionModal";
 import {
-  Calendar, Wallet, Languages, ArrowUpRight, Sun, Moon, HelpCircle, Settings,
+  Calendar, Wallet, Languages, Clock, ArrowUpRight, Sun, Moon, HelpCircle, Settings,
   Globe2, Command, ShieldCheck, WifiOff, Heart,
 } from "lucide-react";
 
@@ -55,6 +55,20 @@ const TOOLS = [
     descNe: "नेपाली, अंग्रेजी, हिन्दी लगायत भाषाहरूबीच एक-ट्याप अनुवाद।",
     metaEn: "9 languages",
     metaNe: "९ भाषाहरू",
+  },
+  {
+    href: "/world_time",
+    icon: Clock,
+    index: "04",
+    titleKey: "worldClock",
+    titleEn: "World Time",
+    titleNe: "विश्व समय",
+    tagEn: "Live Clock",
+    tagNe: "प्रत्यक्ष घडी",
+    descEn: "Real-time world clock with Nepal time, multiple timezones, and timezone conversion.",
+    descNe: "नेपाली समय, धेरै समय क्षेत्रहरू र समय रूपान्तरणसहित वास्तविक विश्व घडी।",
+    metaEn: "12 cities",
+    metaNe: "१२ शहरहरू",
   },
 ];
 
@@ -214,7 +228,7 @@ export default function Home() {
             {[
               { v: "1970–2099", l: isNe ? "वि.सं समर्थन" : "BS years" },
               { v: "150+", l: isNe ? "मुद्राहरू" : "Currencies" },
-              { v: "9", l: isNe ? "भाषाहरू" : "Languages" },
+              { v: "12", l: isNe ? "शहरहरू" : "Cities" },
             ].map((s, i) => (
               <div key={i}>
                 <dt className={`text-[11px] uppercase tracking-[0.16em] ${muted}`}>{s.l}</dt>
@@ -232,7 +246,7 @@ export default function Home() {
                 {isNe ? "उपकरण निर्देशिका" : "Utilities · index"}
               </div>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-                {isNe ? "तीन उपकरण, एउटै लय" : "Three tools, one rhythm"}
+                {isNe ? "चार उपकरण, एउटै लय" : "Four tools, one rhythm"}
               </h2>
             </div>
             <span className={`hidden md:block text-[11px] uppercase tracking-[0.16em] ${muted}`}>
@@ -366,6 +380,7 @@ export default function Home() {
               <Link href="/convert_date" className="hover:text-emerald-500 transition">{isNe ? "मिति" : "Date"}</Link>
               <Link href="/convert_currency" className="hover:text-emerald-500 transition">{isNe ? "मुद्रा" : "Currency"}</Link>
               <Link href="/convert_language" className="hover:text-emerald-500 transition">{isNe ? "भाषा" : "Language"}</Link>
+              <Link href="/world_time" className="hover:text-emerald-500 transition">{isNe ? "समय" : "Time"}</Link>
               <span className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 ${iconBtn}`}>
                 <Heart size={11} className="text-emerald-500" fill="currentColor" />
                 <span className="text-[11px] tracking-wide">{isNe ? "नेपालमा" : "Nepal"}</span>

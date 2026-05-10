@@ -348,6 +348,7 @@ export default function LanguageConverter() {
             <div className="mt-3 space-y-2">
               <CrossLink href="/convert_date" label={isNe ? "मिति रूपान्तरण" : "Date Converter"} sub="01" hairline={hairline} dark={dark} />
               <CrossLink href="/convert_currency" label={isNe ? "मुद्रा रूपान्तरण" : "Currency Converter"} sub="02" hairline={hairline} dark={dark} />
+              <CrossLink href="/world_time" label={isNe ? "विश्व समय" : "World Time"} sub="04" hairline={hairline} dark={dark} />
             </div>
           </div>
         </aside>

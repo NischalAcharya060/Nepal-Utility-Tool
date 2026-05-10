@@ -688,6 +688,7 @@ export default function TemporalPrecisionConverter() {
             <div className="mt-3 space-y-2">
               <CrossLink href="/convert_currency" label={isNe ? "मुद्रा रूपान्तरण" : "Currency Converter"} sub="02" hairline={hairline} dark={dark} />
               <CrossLink href="/convert_language" label={isNe ? "भाषा अनुवाद" : "Language Converter"} sub="03" hairline={hairline} dark={dark} />
+              <CrossLink href="/world_time" label={isNe ? "विश्व समय" : "World Time"} sub="04" hairline={hairline} dark={dark} />
             </div>
           </div>
         </aside>

@@ -11,6 +11,7 @@ const en: Translation = {
   dateConverter: "Date Converter",
   currencyConverter: "Currency Converter",
   languageConverter: "Language Converter",
+  worldClock: "World Time",
   bsToAd: "BS ⇄ AD",
   live: "Live Rates",
   translate: "Translate",
@@ -133,6 +134,7 @@ const ne: Translation = {
   dateConverter: "मिति रूपान्तरण",
   currencyConverter: "मुद्रा रूपान्तरण",
   languageConverter: "भाषा अनुवाद",
+  worldClock: "विश्व समय",
 
   bsToAd: "वि.सं ⇄ ई.सं",
   live: "प्रत्यक्ष दरहरू",
